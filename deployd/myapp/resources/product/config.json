@@ -1,0 +1,37 @@
+{
+	"type": "Collection",
+	"properties": {
+		"PartNumber": {
+			"name": "PartNumber",
+			"type": "string",
+			"typeLabel": "string",
+			"required": true,
+			"id": "PartNumber",
+			"order": 0
+		},
+		"PartDescription": {
+			"name": "PartDescription",
+			"type": "string",
+			"typeLabel": "string",
+			"required": true,
+			"id": "PartDescription",
+			"order": 1
+		},
+		"Category": {
+			"name": "Category",
+			"type": "string",
+			"typeLabel": "string",
+			"required": false,
+			"id": "Category",
+			"order": 2
+		},
+		"Price": {
+			"name": "Price",
+			"type": "number",
+			"typeLabel": "number",
+			"required": false,
+			"id": "Price",
+			"order": 3
+		}
+	}
+}
