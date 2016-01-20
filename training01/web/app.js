@@ -44,7 +44,6 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         $scope.refreshData = function () {
             $scope.myData = [];
 
-            var start = new Date();
             var sec = $interval(function () {
                 $scope.callsPending++;
 
@@ -77,12 +76,45 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         // Product form state: true = shown, false = not shown
         $scope.showForm = false;
 
-        // onchange cell value
+        // onchange cell value, update row record
         $scope.gridOptions.onRegisterApi = function (gridApi) {
             $scope.gridApi = gridApi;
             gridApi.edit.on.afterCellEdit($scope, function (rowEntity, colDef, newValue, oldValue) {
-                $http.put('http://localhost:2403/products/' + rowEntity.id, rowEntity);
-                console.log('{"Column":"' + colDef.name + '","ID":"' + rowEntity.id + '","Old Value":"' + oldValue + '","New Value":"' + newValue + '"}');
+                $http.put('http://localhost:2403/products/' + rowEntity.id, rowEntity)
+                    .success(function () {
+                        console.log('{"Column":"' + colDef.name + '","ID":"' + rowEntity.id + '","Old Value":"' + oldValue + '","New Value":"' + newValue + '"}');
+                    })
+                    .error(function (data) {
+                        BootstrapDialog.show({
+                            title: 'Error',
+                            message: data.message,
+                            type: BootstrapDialog.TYPE_DANGER
+                        });
+                    });
+            });
+        };
+        
+        // submit new product form
+        $scope.addProduct = function () {
+            if (!$scope.partNumber || $scope.partNumber === '' ||
+                !$scope.partDescription || $scope.partDescription === '') {
+                BootstrapDialog.show({
+                    title: 'Error',
+                    message: 'Please check required inputs.',
+                    type: BootstrapDialog.TYPE_DANGER
+                });
+                return;
+            }
+            var product = {
+                PartNumber: $scope.partNumber,
+                PartDescription: $scope.partDescription,
+                Category: $scope.category,
+                Price: $scope.price
+            };
+            
+            $http.post('http://localhost:2403/products', product)
+            .success(function(data){
+                $scope.myData.push(data);
             });
         };
 
