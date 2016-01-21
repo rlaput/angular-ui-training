@@ -33,7 +33,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
 
         $scope.gridOptions.columnDefs = [
             // { name: 'id', visible: false },
-            { name: 'PartNumber' },
+            { name: 'PartNumber', enableCellEdit: true },
             { name: 'PartDescription', enableCellEdit: true },
             { name: 'Category', enableCellEdit: true },
             { name: 'Price', enableCellEdit: true },
@@ -141,7 +141,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
                 }
             };
 
-          showConfirmDialog('Delete selected ' + selectedLength + ' part numbers?', callbackFunction);  
+          showConfirmDialog('Delete selected ' + selectedLength + ' part number(s)?', callbackFunction);  
         };
         
         /**************************************
