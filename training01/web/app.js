@@ -10,6 +10,7 @@ var app = angular.module('app',
         'ui.grid.moveColumns',
         'ui.grid.exporter',
         'ui.grid.grouping',
+        'ui.grid.pagination'
     ]);
 
 app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridConstants', 'uiGridGroupingConstants',
@@ -23,6 +24,8 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         $scope.gridOptions.showGridFooter = true;
         // $scope.gridOptions.showColumnFooter = true;
         $scope.gridOptions.fastWatch = true;
+        $scope.gridOptions.paginationPageSizes = [10, 25, 50];
+        $scope.gridOptions.paginationPageSize = 10;
 
         $scope.gridOptions.rowIdentity = function (row) {
             return row.id;
@@ -33,14 +36,14 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
 
         $scope.gridOptions.columnDefs = [
             // { name: 'id', visible: false },
-            { name: 'PartNumber', enableCellEdit: true },
+            { name: 'PartNumber', enableCellEdit: true, sort: { direction: uiGridConstants.ASC } },
             { name: 'PartDescription', enableCellEdit: true },
             { name: 'Category', enableCellEdit: true },
             { name: 'Price', enableCellEdit: true },
         ];
 
         $scope.callsPending = 0;
-        
+
         var productApiLink = 'http://localhost:2403/products/'; // API link for products
 
         // READ: get all products
@@ -97,6 +100,11 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
                 showErrorDialog('Please check required inputs.');
                 return;
             }
+
+            if ($scope.price && $scope.price < 0) {
+                return;
+            }
+
             var product = {
                 PartNumber: $scope.partNumber,
                 PartDescription: $scope.partDescription,
@@ -141,7 +149,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
                 }
             };
 
-          showConfirmDialog('Delete selected ' + selectedLength + ' part number(s)?', callbackFunction);  
+            showConfirmDialog('Delete selected ' + selectedLength + ' part number(s)?', callbackFunction);
         };
         
         /**************************************
@@ -154,7 +162,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
             $scope.partDescription = '';
             $scope.category = '';
             $scope.price = '';
-            $scope.showForm = false;
+            // $scope.showForm = false;
         }
 
         // Show bootstrap error dialog
