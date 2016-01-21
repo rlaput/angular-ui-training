@@ -21,7 +21,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         $scope.gridOptions.enableFiltering = true;
         $scope.gridOptions.enableGridMenu = true;
         $scope.gridOptions.showGridFooter = true;
-        $scope.gridOptions.showColumnFooter = true;
+        // $scope.gridOptions.showColumnFooter = true;
         $scope.gridOptions.fastWatch = true;
 
         $scope.gridOptions.rowIdentity = function (row) {
@@ -32,7 +32,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         };
 
         $scope.gridOptions.columnDefs = [
-            { name: 'id', visible: false },
+            // { name: 'id', visible: false },
             { name: 'PartNumber' },
             { name: 'PartDescription', enableCellEdit: true },
             { name: 'Category', enableCellEdit: true },
@@ -40,14 +40,17 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         ];
 
         $scope.callsPending = 0;
+        
+        var productApiLink = 'http://localhost:2403/products/'; // API link for products
 
+        // READ: get all products
         $scope.refreshData = function () {
             $scope.myData = [];
 
             var sec = $interval(function () {
                 $scope.callsPending++;
 
-                $http.get('http://localhost:2403/products')
+                $http.get(productApiLink)
                     .success(function (data) {
                         $scope.callsPending--;
 
@@ -73,36 +76,25 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
 
         };
 
-        // Product form state: true = shown, false = not shown
-        $scope.showForm = false;
-
-        // onchange cell value, update row record
+        // UPDATE: onchange cell value, update row record
         $scope.gridOptions.onRegisterApi = function (gridApi) {
             $scope.gridApi = gridApi;
             gridApi.edit.on.afterCellEdit($scope, function (rowEntity, colDef, newValue, oldValue) {
-                $http.put('http://localhost:2403/products/' + rowEntity.id, rowEntity)
+                $http.put(productApiLink + rowEntity.id, rowEntity)
                     .success(function () {
                         console.log('{"Column":"' + colDef.name + '","ID":"' + rowEntity.id + '","Old Value":"' + oldValue + '","New Value":"' + newValue + '"}');
                     })
                     .error(function (data) {
-                        BootstrapDialog.show({
-                            title: 'Error',
-                            message: data.message,
-                            type: BootstrapDialog.TYPE_DANGER
-                        });
+                        showErrorDialog(data.message);
                     });
             });
         };
         
-        // submit new product form
+        // CREATE: submit new product form
         $scope.addProduct = function () {
             if (!$scope.partNumber || $scope.partNumber === '' ||
                 !$scope.partDescription || $scope.partDescription === '') {
-                BootstrapDialog.show({
-                    title: 'Error',
-                    message: 'Please check required inputs.',
-                    type: BootstrapDialog.TYPE_DANGER
-                });
+                showErrorDialog('Please check required inputs.');
                 return;
             }
             var product = {
@@ -111,11 +103,95 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
                 Category: $scope.category,
                 Price: $scope.price
             };
-            
-            $http.post('http://localhost:2403/products', product)
-            .success(function(data){
-                $scope.myData.push(data);
-            });
-        };
 
+            $http.post(productApiLink, product)
+                .success(function (data) {
+                    $scope.myData.push(data);
+                    showSuccessDialog('Product has been added.');
+                    clearProductForm();
+                })
+                .error(function (data) {
+                    showErrorDialog(data.message);
+                });
+        };
+        
+        // DELETE: delete selected rows
+        $scope.deleteSelected = function () {
+            var selectedLength = $scope.gridApi.selection.getSelectedRows().length;
+
+            if (selectedLength == 0) {
+                showErrorDialog('Please select part numbers to delete.');
+                return;
+            }
+
+            var callbackFunction = function (ok) {
+                if (ok) {
+                    angular.forEach($scope.gridApi.selection.getSelectedRows(), function (data, index) {
+                        $http.delete(productApiLink + data.id)
+                            .success(function () {
+                                console.log('Part number ' + data.PartNumber + ' has been deleted.');
+                            })
+                            .error(function () {
+                                console.log('ERROR encountered while deleting part number ' + data.PartNumber);
+                            });
+                        $scope.myData.splice($scope.myData.lastIndexOf(data), 1);
+                    });
+
+                    showSuccessDialog('Selected part numbers have been deleted.');
+                }
+            };
+
+          showConfirmDialog('Delete selected ' + selectedLength + ' part numbers?', callbackFunction);  
+        };
+        
+        /**************************************
+        * PRIVATE FUNCTIONS
+        ***************************************/
+
+        // Hide form and clear fields
+        function clearProductForm() {
+            $scope.partNumber = '';
+            $scope.partDescription = '';
+            $scope.category = '';
+            $scope.price = '';
+            $scope.showForm = false;
+        }
+
+        // Show bootstrap error dialog
+        function showErrorDialog(message) {
+            BootstrapDialog.show({
+                title: 'Error',
+                message: message,
+                type: BootstrapDialog.TYPE_DANGER
+            });
+        }
+
+        // Show bootstrap success dialog
+        function showSuccessDialog(message) {
+            BootstrapDialog.show({
+                title: 'Success',
+                message: message,
+                type: BootstrapDialog.TYPE_SUCCESS
+            });
+        }
+
+        // Show bootstrap confirm dialog and accept callback function
+        function showConfirmDialog(message, callbackFunction) {
+            BootstrapDialog.confirm({
+                title: 'WARNING',
+                message: message,
+                type: BootstrapDialog.TYPE_WARNING,
+                callback: callbackFunction
+            });
+        }
+        
+        /**************************************
+        * INITIAL VARIABLES AND FUNCTION CALLS
+        ***************************************/
+        
+        // Product form state: true = shown, false = not shown
+        $scope.showForm = false;
+
+        // Refresh data on page load
+        $scope.refreshData();
     }]);
