@@ -83,6 +83,24 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         $scope.gridOptions.onRegisterApi = function (gridApi) {
             $scope.gridApi = gridApi;
             gridApi.edit.on.afterCellEdit($scope, function (rowEntity, colDef, newValue, oldValue) {
+                if(colDef.name === 'Price' && newValue === ''){
+                    rowEntity.Price = 0;
+                }
+                else if(colDef.name === 'Price' && (typeof newValue !== 'number' || newValue < 0)){
+                    showErrorDialog('Price field should be a number and should not be less than 0.');
+                    rowEntity.Price = oldValue;
+                    return;
+                }
+                else if(colDef.name === 'PartNumber' && newValue === ''){
+                    showErrorDialog('Part Number field is required.');
+                    rowEntity.PartNumber = oldValue;
+                    return;
+                }
+                else if(colDef.name === 'PartDescription' && newValue === ''){
+                    showErrorDialog('Part Description field is required.');
+                    rowEntity.PartDescription = oldValue;
+                    return;
+                }
                 $http.put(productApiLink + rowEntity.id, rowEntity)
                     .success(function () {
                         console.log('{"Column":"' + colDef.name + '","ID":"' + rowEntity.id + '","Old Value":"' + oldValue + '","New Value":"' + newValue + '"}');
@@ -109,7 +127,7 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
                 PartNumber: $scope.partNumber,
                 PartDescription: $scope.partDescription,
                 Category: $scope.category,
-                Price: $scope.price
+                Price: $scope.price ? $scope.price : 0
             };
 
             $http.post(productApiLink, product)
@@ -203,3 +221,25 @@ app.controller('MainCtrl', ['$scope', '$http', '$timeout', '$interval', 'uiGridC
         // Refresh data on page load
         $scope.refreshData();
     }]);
+    
+    var businessUnit = {
+        id: '12',
+        name: 'bu1',
+        transactions: [
+            {
+                id: '34',
+                qty: 55
+            },
+            {
+                id: '35',
+                qty: 30
+            }
+        ]
+    };
+    
+    var transaction = {
+      id: '67',
+      qty: 35  
+    };
+    
+    businessUnit.transactions.push(transaction);
