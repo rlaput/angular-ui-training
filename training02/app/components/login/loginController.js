@@ -6,14 +6,12 @@ angular.module('myApp.LoginController', [
 
     .controller('LoginCtrl', [
         '$rootScope',
-        'MainService',
-        function ($rootScope, MainService) {
+        function ($rootScope) {
             var login = this;
 
             login.username = '';
 
             login.submit = function (user) {
-                // MainService.setUsername(user.username);
                 $rootScope.userName = user.username;
             }
         }
